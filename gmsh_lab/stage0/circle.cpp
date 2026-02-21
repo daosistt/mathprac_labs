@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
     gmsh::initialize();
 
-    gmsh::model::add("t2");
+    gmsh::model::add("circle");
 
     double lc = 1e-2;
 
@@ -28,8 +28,6 @@ int main(int argc, char **argv)
     gmsh::model::geo::synchronize();
 
     gmsh::model::mesh::generate(2);
-
-    gmsh::write("cube.msh");
 
     std::set<std::string> args(argv, argv + argc);
     if(!args.count("-nopopup")) gmsh::fltk::run();

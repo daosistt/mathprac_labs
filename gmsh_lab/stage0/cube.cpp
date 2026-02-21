@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
     gmsh::initialize();
 
-    gmsh::model::add("t2");
+    gmsh::model::add("cube");
 
     double lc = 1e-2;
 
