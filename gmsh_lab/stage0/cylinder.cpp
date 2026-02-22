@@ -26,15 +26,15 @@ int main(int argc, char **argv)
     gmsh::model::geo::addCircleArc(4, 1, 5, 3);
     gmsh::model::geo::addCircleArc(5, 1, 2, 4);
 
-    // Лкружность
+    // Окружность
     gmsh::model::geo::addCurveLoop({1, 2, 3, 4}, 1);
     gmsh::model::geo::addPlaneSurface({1}, 1);
 
-    // Выдавливание
+    // Выдавливание ;)
+    gmsh::model::geo::synchronize();
+
     std::vector<std::pair<int, int>> extruded;
-    std::vector<int> numElements;
-    std::vector<double> heights;
-    gmsh::model::geo::extrude({{2, 1}}, 0, 0, h, extruded, numElements, heights, false);
+    gmsh::model::geo::extrude({{2, 1}}, 0, 0, h, extruded);
 
     // Синхронизация, генерация сетки и отображение
     gmsh::model::geo::synchronize();
