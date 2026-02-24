@@ -106,7 +106,7 @@ int main() {
         } : [](double x, double y, double z, double t) { return 0.0; },
 
         (moving == "hands" || moving == "combined") ? [](double x, double y, double z, double t) {
-            if (x < -25.96 || x > 25.96) {
+            if ((x < -25.96 || x > 25.96) && (y < ((t < 0.24) ? -7.1 + 5 * t : -5.9 - 5 * (t - 0.24)))) {
                 if (t < 0.12) {
                     return 20.0 + 5;
                 } else if (t >= 0.12 && t < 0.24) {
