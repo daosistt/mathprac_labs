@@ -78,6 +78,9 @@ int main(int argc, char **argv)
 
   gmsh::model::mesh::generate(3);
 
+  gmsh::option::setNumber("Mesh.MshFileVersion", 2.2);
+  gmsh::write("jet_fighter.msh");
+
   // Launch the GUI to see the results:
   std::set<std::string> args(argv, argv + argc);
   if(!args.count("-nopopup")) gmsh::fltk::run();
