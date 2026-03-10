@@ -5,7 +5,7 @@ CalcNode::CalcNode() : x(0.0), y(0.0), z(0.0), smth(0.0), vx(0.0), vy(0.0), vz(0
 }
 
 CalcNode::CalcNode(double x, double y, double z, double smth, double vx, double vy, double vz) 
-        : x(x), y(y), z(z), smth(smth), vx(vx), vy(vy), vz(vz)
+        : x(x), y(y), z(z), smth(smth), vx(vx), vy(vy), vz(vz), initX(x), initY(y), initZ(z)
 {
 }
 

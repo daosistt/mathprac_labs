@@ -21,6 +21,16 @@ CalcMesh::CalcMesh(const std::vector<double>& nodesCoords, const std::vector<std
         double smth = pow(pointX, 2) + pow(pointY, 2) + pow(pointZ, 2);
         nodes[i] = CalcNode(pointX, pointY, pointZ, smth, 0.0, 0.0, 0.0);
     }
+    
+    // Считаем положение центра масс
+    updateCenterOfMass(); 
+
+    // Сохраняем относительные координаты в нодах
+    for (auto& node : nodes) {
+        node.initX = node.x - com.centerX;
+        node.initY = node.y - com.centerY;
+        node.initZ = node.z - com.centerZ;
+    }
 
     // Пройдём по элементам в модели gmsh
     elements.resize(tetrsPoints.size() / 4);
@@ -32,6 +42,16 @@ CalcMesh::CalcMesh(const std::vector<double>& nodesCoords, const std::vector<std
     }
 }
 
+void CalcMesh::setAngularVelocity(
+    std::function<double(double)> yaw_rate,
+    std::function<double(double)> pitch_rate,
+    std::function<double(double)> roll_rate) {
+
+    com.yaw_rate_func = yaw_rate;
+    com.pitch_rate_func = pitch_rate;
+    com.roll_rate_func = roll_rate;
+}
+
 void CalcMesh::doTimeStep(double tau) {
     // Обновляем скорости по текущему времени
     for(auto& node : nodes) {
@@ -40,10 +60,49 @@ void CalcMesh::doTimeStep(double tau) {
         node.vz = vzFunc(node.x, node.y, node.z, currentTime);
     }
 
-    // Двигаем точки
-    for(unsigned int i = 0; i < nodes.size(); i++) {
-        nodes[i].move(tau);
+    for(auto& node : nodes) {
+        node.move(tau);
     }
+
+    updateCenterOfMass(); 
+    com.yaw   += com.yaw_rate_func(currentTime) * tau;
+    com.pitch += com.pitch_rate_func(currentTime) * tau;
+    com.roll  += com.roll_rate_func(currentTime) * tau;
+
+    // Применяем вращение к точкам
+    double cosYaw = cos(com.yaw);
+    double sinYaw = sin(com.yaw);
+    double cosPitch = cos(com.pitch);
+    double sinPitch = sin(com.pitch);
+    double cosRoll = cos(com.roll);
+    double sinRoll = sin(com.roll);
+
+    for (auto& node : nodes) {
+        // Берём относительные координаты
+        double x = node.initX;
+        double y = node.initY;
+        double z = node.initZ;
+
+        // yaw
+        double x1 = x * cosYaw - y * sinYaw;
+        double y1 = x * sinYaw + y * cosYaw;
+        double z1 = z;
+
+        // pitch
+        double x2 = x1 * cosPitch + z1 * sinPitch;
+        double y2 = y1;
+        double z2 = -x1 * sinPitch + z1 * cosPitch;
+
+        // roll
+        double x3 = x2;
+        double y3 = y2 * cosRoll - z2 * sinRoll;
+        double z3 = y2 * sinRoll + z2 * cosRoll;
+
+        node.x = com.centerX + x3;
+        node.y = com.centerY + y3;
+        node.z = com.centerZ + z3;
+    }
+
 
     currentTime += tau;
 }
@@ -110,4 +169,16 @@ void CalcMesh::setVelocities(std::function<double(double,double,double,double)> 
         vyFunc = fy;
         vzFunc = fz;
     }
+}
+
+void CalcMesh::updateCenterOfMass() {
+    com.centerX = com.centerY = com.centerZ = 0.0;
+    for (auto& node : nodes) {
+        com.centerX += node.x;
+        com.centerY += node.y;
+        com.centerZ += node.z;
+    }
+    com.centerX /= nodes.size();
+    com.centerY /= nodes.size();
+    com.centerZ /= nodes.size();
 }

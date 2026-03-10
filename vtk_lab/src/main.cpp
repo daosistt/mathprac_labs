@@ -14,7 +14,7 @@ int main() {
 
     // Считаем STL
     try {
-        gmsh::merge("jet_fighter.stl"); 
+        gmsh::merge("../jet_fighter.stl"); 
     } catch(...) {
         gmsh::logger::write("Could not load STL mesh: bye!");
         gmsh::finalize();
@@ -95,22 +95,61 @@ int main() {
 
     CalcMesh mesh(nodesCoord, *tetrsNodesTags);
 
-    // TODO чуть поменять CalcMesh и doTimeStep учётом центра масс
-    // чтобы добавить pitch, roll, yaw  или петли
+    double t1 = 0.1;      // конец первого прямого участка
+    double t2 = 0.7;      // конец первой петли
+    double t3 = 0.8;      // конец второго прямого
+    double t4 = 1.4;     // конец второй петли
+
+    double R = 1000.0;       // радиус петли
+    double omega = 2 * M_PI / (t2 - t1);  // чтобы за время петли сделать полный круг
+    double v_straight = 20000.0;  // скорость на прямых участках
 
     mesh.setVelocities(
         [](double x, double y, double z, double t) { return 0.0; },
 
-        [](double x, double y, double z, double t) { return -2000.0; },
+        [t1, t2, t3, t4, R, omega, v_straight](double x, double y, double z, double t) {
+            if (t < t1) { return -v_straight; }
+            else if (t < t2) {
+                double tau = t - t1;
+                return - R * omega * cos(omega * tau);
+            }
+            else if (t < t3) { return -v_straight; }
+            else if (t < t4) {
+                double tau = t - t3;
+                return - R * omega * cos(omega * tau);
+            }
+            else { return -v_straight; }
+        },
 
-        [](double x, double y, double z, double t) { return 0.0; }
+        [t1, t2, t3, t4, R, omega](double x, double y, double z, double t) {
+            if (t < t1) { return 0.0; }
+            else if (t < t2) {
+                double tau = t - t1;
+                return R * omega * sin(omega * tau);
+            }
+            else if (t < t3) { return 0.0; }
+            else if (t < t4) {
+                double tau = t - t3;
+                return R * omega * sin(omega * tau);
+            }
+            else { return 0.0; }
+        }
+    );
+
+    mesh.setAngularVelocity(
+        [](double t) { return 0.0; },
+        [](double t) { return 0.0; },
+
+        [t1, t2, t3, t4, omega](double t) -> double {
+            if ((t >= t1 && t < t2) || (t >= t3 && t < t4)) { return - omega; } else { return 0.0; }
+        }
     );
 
     gmsh::finalize();
 
     mesh.snapshot(0);
     double tau = 0.01;
-    for(unsigned int step = 1; step < 150; step++) {
+    for(unsigned int step = 1; step < 151; step++) {
         mesh.doTimeStep(tau);
         mesh.snapshot(step);
     }

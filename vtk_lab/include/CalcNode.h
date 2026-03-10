@@ -15,6 +15,10 @@ class CalcNode {
     double vy;
     double vz;
 
+    double initX;
+    double initY;
+    double initZ;
+
   public:
     CalcNode();
     CalcNode(double x, double y, double z, double smth, double vx, double vy, double vz);
