@@ -12,7 +12,6 @@ int main() {
     gmsh::initialize();
     gmsh::model::add("jet_fighter");
 
-    // Считаем STL
     try {
         gmsh::merge("../jet_fighter.stl"); 
     } catch(...) {

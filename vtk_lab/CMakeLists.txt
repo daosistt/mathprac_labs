@@ -23,6 +23,7 @@ include_directories(
 add_library(mesh_lib
     src/CalcNode.cpp
     src/CalcMesh.cpp
+    src/MeshLoader.cpp
 )
 
 # Создаем исполняемый файл
